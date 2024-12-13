@@ -1,0 +1,7 @@
+
+test-app.2kdeveloper.com {
+	reverse_proxy express_app:5000
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+}

@@ -1,0 +1,95 @@
+---
+- hosts: server
+  become: true
+
+  tasks:
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: true
+
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+          - git
+          - vim
+          - tmux
+          - bash
+          - ufw
+        state: latest
+        update_cache: true
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+    # Firewall Configuration (using ufw)
+    - name: Allow everything and enable UFW
+      ufw:
+        state: enabled
+        policy: allow
+
+    - name: Set logging
+      ufw:
+        logging: on
+
+    - name: Allow ssh
+      ufw:
+        rule: allow
+        name: OpenSSH
+
+    - name: Allow http
+      ufw:
+        rule: allow
+        port: 80
+        proto: tcp
+
+    - name: Allow https
+      ufw:
+        rule: allow
+        port: 443
+        proto: tcp
+
+    # gen ssh key for github
+    - name: Generate SSH key pair
+      ansible.builtin.openssh_keypair:
+        path: "~/.ssh/id_rsa"
+        type: rsa
+        size: 4096
+        state: present
+        comment: "automation@vps"
+
+    - name: Output the SSH public key
+      ansible.builtin.command:
+        cmd: cat ~/.ssh/id_rsa.pub  # Use the full path
+      register: ssh_public_key
+
+    - name: Show the SSH public key
+      ansible.builtin.debug:
+        msg: "{{ ssh_public_key.stdout }}"

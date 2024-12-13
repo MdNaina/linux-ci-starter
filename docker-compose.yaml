@@ -1,0 +1,19 @@
+services:
+  app:
+    container_name: express_app
+    build:
+      dockerfile: docker/express-app.dockerfile
+      context: ./app
+
+  caddy:
+    container_name: reverse_proxy
+    build:
+      dockerfile: docker/caddy.dockerfile
+      context: .
+    environment:
+      CF_API_TOKEN: ${CF_API_TOKEN}
+    ports:
+      - "80:80"
+      - "443:433"
+    volumes:
+      - "./Caddyfile:/etc/caddy/Caddyfile"

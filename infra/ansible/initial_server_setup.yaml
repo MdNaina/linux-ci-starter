@@ -1,0 +1,57 @@
+---
+- name: Secure SSH and User Configuration
+  hosts: all
+  become: true
+  remote_user: root
+  vars:
+    new_user: "automation"                
+    ssh_pub_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"  # Local public key path
+  tasks:
+
+    - name: Ensure the required user exists
+      user:
+        name: "{{ new_user }}"
+        state: present
+        shell: /bin/bash
+        groups: "sudo"   # Add the user to sudo group
+        append: true
+        create_home: true
+
+    - name: Set authorized keys for the user
+      authorized_key:
+        user: "{{ new_user }}"
+        state: present
+        key: "{{ ssh_pub_key }}"
+
+    - name: Configure SSHD settings to disable root login and password authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: "{{ item.regex }}"
+        line: "{{ item.line }}"
+        backup: true
+      with_items:
+        - { regex: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+        - { regex: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+      notify:
+        - Restart SSHD
+
+    - name: Ensure sudoers file allows passwordless sudo for the new user
+      lineinfile:
+        dest: "/etc/sudoers.d/{{ new_user }}"
+        state: present
+        create: true
+        mode: '0440'
+        line: "{{ new_user }} ALL=(ALL) NOPASSWD:ALL"
+
+  handlers:
+    - name: Restart SSHD
+      service:
+        name: ssh
+        state: restarted
+
+  post_tasks:
+    - name: Display success message
+      debug:
+        msg: "User {{ new_user }} has been created, SSH is secured, and root login is disabled."
+
