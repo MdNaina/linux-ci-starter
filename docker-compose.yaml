@@ -3,7 +3,7 @@ services:
     container_name: express_app
     build:
       dockerfile: docker/express-app.dockerfile
-      context: ./app
+      context: .
 
   caddy:
     container_name: reverse_proxy

@@ -1,0 +1,37 @@
+---
+- name: Setup repo on server with ci/cd
+  hosts: all
+  vars:
+    env_vars: "{{ lookup('community.general.read_env', '../../.env') }}"
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.12
+  
+  tasks:
+    - name: Create necessary directory
+      ansible.builtin.file:
+        path: ~/{{ item }}
+        state: directory
+      with_items:
+        - services
+        - automation
+
+    - name: Clone the repo
+      ansible.builtin.git:
+        repo: 'https://github.com/MdNaina/vps-ci-cd-starter.git'
+        dest: ~/services/project
+
+    - name: Copy automation files to automation
+      ansible.builtin.copy:
+        src: ./files/automation.sh
+        dest: ~/automation/deploy.sh
+
+    # - name: Install Docker SDK
+    #   ansible.builtin.pip:
+    #     name: docker
+    #     state: present
+    #     executable: pip3
+
+    - name: Start project with Docker Compose
+      community.docker.docker_compose_v2:
+        project_src: ~/services/project
+      register: output
