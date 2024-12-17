@@ -2,8 +2,7 @@
 - name: Setup repo on server with ci/cd
   hosts: all
   vars:
-    env_vars: "{{ lookup('community.general.read_env', '../../.env') }}"
-  vars:
+    cf_api_token: "{{ lookup('ansible.builtin.env', 'CF_API_TOKEN') }}"
     ansible_python_interpreter: /usr/bin/python3.12
   
   tasks:
@@ -24,14 +23,17 @@
       ansible.builtin.copy:
         src: ./files/automation.sh
         dest: ~/automation/deploy.sh
-
-    # - name: Install Docker SDK
-    #   ansible.builtin.pip:
-    #     name: docker
-    #     state: present
-    #     executable: pip3
+        mode: u+rwx
 
     - name: Start project with Docker Compose
       community.docker.docker_compose_v2:
         project_src: ~/services/project
+      environment:
+        CF_API_TOKEN: "{{ cf_api_token }}"
       register: output
+
+    - name: Setup CI/CD pipeline
+      ansible.builtin.cron:
+        name: "Setup deploy cron job for CI/CD"
+        job: ~/automation/deploy.sh
+
