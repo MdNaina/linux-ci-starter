@@ -19,6 +19,11 @@
         repo: 'https://github.com/MdNaina/vps-ci-cd-starter.git'
         dest: ~/services/project
 
+    - name: Copy Env file
+      ansible.builtin.copy:
+        src: ../../.env
+        dest: ~/services/project/.env
+
     - name: Copy automation files to automation
       ansible.builtin.copy:
         src: ./files/automation.sh
