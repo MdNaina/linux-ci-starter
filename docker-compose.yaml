@@ -1,6 +1,5 @@
 services:
-  app:
-    container_name: express_app
+  express_app:
     build:
       dockerfile: docker/express-app.dockerfile
       context: .
