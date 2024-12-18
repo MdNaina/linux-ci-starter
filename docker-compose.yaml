@@ -5,7 +5,6 @@ services:
       context: .
 
   caddy:
-    container_name: reverse_proxy
     build:
       dockerfile: docker/caddy.dockerfile
       context: .
