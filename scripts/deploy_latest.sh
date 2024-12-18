@@ -12,7 +12,7 @@ docker compose build
 
 OLD_CONTAINERS=$(docker ps -aqf "name=express_app")
 
-echo "$(date --utc +%FT%TZ): Scaling to 2 containers")
+echo "$(date --utc +%FT%TZ): Scaling to 2 containers"
 
 docker compose up -d --no-deps --scale express_app=2 --no-recreate express_app
 
